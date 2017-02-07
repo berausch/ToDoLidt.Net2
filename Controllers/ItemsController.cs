@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ToDoList.Controllers
 {
@@ -13,7 +14,7 @@ namespace ToDoList.Controllers
         private ToDoListContext db = new ToDoListContext();
         public IActionResult Index()
         {
-            return View(db.Items.ToList());
+            return View(db.Items.Include(items => items.Category).ToList());
         }
         public IActionResult Details(int id)
         {
@@ -22,6 +23,7 @@ namespace ToDoList.Controllers
         }
         public IActionResult Create()
         {
+            ViewBag.CategoryId = new SelectList(db.Categories, "CategoryId", "Name");
             return View();
         }
         [HttpPost]
@@ -31,16 +33,17 @@ namespace ToDoList.Controllers
             db.SaveChanges();
             return RedirectToAction("Index");
         }
-        public IActionResult Edit(int id)
+        public ActionResult Edit(int id)
         {
             var thisItem = db.Items.FirstOrDefault(items => items.ItemId == id);
+            ViewBag.CategoryId = new SelectList(db.Categories, "CategoryId", "Name");
             return View(thisItem);
         }
 
         [HttpPost]
         public IActionResult Edit(Item item)
         {
-            db.Entry(item).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+            db.Entry(item).State = EntityState.Modified;
             db.SaveChanges();
             return RedirectToAction("Index");
         }
